@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load partials %}
+
+{% block content %}
+
+<div class="flex flex-col items-center mx-10 md:mx-20">
+    <h1 class="prose-2xl mb-4">{{ user.username }}'s To-Do list</h1>
+
+    <form class="mb-4" 
+        hx-post="{% url 'submit-todo' %}"
+        hx-target="#todo-table-body"
+        hx-swap="beforeend"
+        hx-on::after-request="this.reset()">
+        
+        <div class="form-control">
+            <label>Task Description</label>
+            {% render_field form.description class="input input-bordered max-w-xs" %}
+        </div>
+
+        <div class="form-control">
+            <label>Is completed?</label>
+            {% render_field form.is_completed class="checkbox checkbox-success" %}
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Submit</button>
+    </form>
+
+    
+    <table class="table table-zebra table-lg">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Created</th>
+                <th>Completed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="todo-table-body">
+        {% for todo in todos %}
+            {% partialdef todoitem-partial inline=True %}
+                <tr>
+                    <td>{{ todo.description }}</td>
+                    <td>{{ todo.created_at }}</td>
+                    <td>{{ todo.is_completed }}</td>
+                    <td>
+                        {% if not todo.is_completed %}
+                            <button class="btn btn-xs btn-success"
+                                hx-post="{% url 'complete-todo' todo.pk %}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML">Mark Complete</button>
+                        {% endif %}
+
+                        <button class="btn btn-xs btn-error"
+                            hx-delete="{% url 'delete-todo' todo.pk %}"
+                            hx-on:delete-todo="this.closest('tr').remove()">Delete</button>
+                    </td>
+                </tr>
+            {% endpartialdef %}
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock %}
